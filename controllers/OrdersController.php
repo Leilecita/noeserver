@@ -337,5 +337,52 @@ class OrdersController extends BaseController
         }
     }
 
+    public function get()
+    {
+        if(isset($_GET['method'])){
+            $this->method();
+        }else if(isset($_GET['client_id'])){
+
+            $listReport = array();
+
+            $list_orders_by_user_id = $this->getModel()->findAllOrder(array('client_id = "' .$_GET['client_id'].'"'),$this->getPaginator());
+
+            for ($j = 0; $j < count($list_orders_by_user_id); ++$j) {
+                $client = $this->clients->findById($list_orders_by_user_id[$j]['client_id']);
+
+                $items_order_list = $this->items_order->findAllItems(array('order_id = "' . $list_orders_by_user_id[$j]['id'] . '"'));
+
+                $array_product = array();
+
+                $total_amount=0;
+                for ($i = 0; $i < count($items_order_list); ++$i) {
+
+                    $array_product[] = array('name' => $items_order_list[$i]['product_name'], 'price' => $items_order_list[$i]['price'],
+                        'quantity' => $items_order_list[$i]['quantity'],'price_type' => $items_order_list[$i]['price_type']);
+
+                    $total_amount=$total_amount+($items_order_list[$i]['price']*$items_order_list[$i]['quantity']);
+
+                }
+
+                $listReport[] = array('defaulter' => $list_orders_by_user_id[$j]['defaulter'],
+                    'delivery_time' => $list_orders_by_user_id[$j]['delivery_time'],
+                    'order_created' => $list_orders_by_user_id[$j]['created'],'order_obs' => $list_orders_by_user_id[$j]['observation'],
+                    'order_id' => $list_orders_by_user_id[$j]['id'],
+                    'client_id' => $client['id'],
+                    'name' => $client['name'],
+                    'prepared' => $list_orders_by_user_id[$j]['prepared'],
+                    'address' => $client['address'],'zone' => $client['zone'],'phone' => $client['phone'],
+                    'delivery_date' => $list_orders_by_user_id[$j]['delivery_date'],'total_amount' => $total_amount, 'items' => $array_product,
+                    'state' => $list_orders_by_user_id[$j]['state'], 'priority' => $list_orders_by_user_id[$j]['priority'],
+                    );
+            }
+
+            $this->returnSuccess(200, $listReport);
+
+        }else{
+            parent::get();
+        }
+    }
+
 
 }
