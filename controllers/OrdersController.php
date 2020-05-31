@@ -134,7 +134,7 @@ class OrdersController extends BaseController
                 if($order['prepared'] == "true"){
                     $this->model->update($order['id'],array('prepared'=> "false"));
 
-                }else if ($order['preparec'] == "false"){
+                }else if ($order['prepared'] == "false"){
                     $this->model->update($order['id'],array('prepared'=> "true"));
                 }
 
@@ -384,5 +384,23 @@ class OrdersController extends BaseController
         }
     }
 
+
+
+
+    function deleteOldPendientOrders(){
+
+        $filter=array();
+
+        $previous_date = date('Y-m-d', strtotime(  date("Y-m-d").' -1 day'))." 00:00:00";
+
+
+        $filter[]='delivery_date < "' .$previous_date.'"';
+        $filter[]='state = "' ."pendiente".'"';
+
+        var_dump($previous_date);
+        //var_dump('delivery_date < "' .$previous_date.'"');
+
+        $this->model->deleteOldPendientOrders($filter);
+    }
 
 }

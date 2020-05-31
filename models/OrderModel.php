@@ -16,6 +16,13 @@ class OrderModel extends BaseModel
         $this->tableName = 'orders';
     }
 
+
+    function deleteOldPendientOrders($filters){
+        $conditions = join(' AND ',$filters);
+        $query = 'DELETE FROM '.$this->tableName .( empty($filters) ?  '' : ' WHERE '.$conditions );
+        return $this->getDb()->fetch_row($query);
+    }
+
     function sumAmountDebtOrder($user_id){
         $response = $this->getDb()->fetch_row('SELECT SUM(debt_value) AS total FROM '.$this->tableName.' WHERE client_id = ? ',$user_id);
 
