@@ -10,11 +10,11 @@ require_once __DIR__.'/../models/ClientModel.php';
 require_once __DIR__.'/../models/OrderModel.php';
 class ClientsController extends BaseController
 {
-   // private $orders;
+    private $orders;
     function __construct(){
         parent::__construct();
         $this->model = new ClientModel();
-       // $this->orders = new OrderModel();
+        $this->orders = new OrderModel();
     }
 
 
@@ -27,10 +27,11 @@ class ClientsController extends BaseController
 
         for ($j = 0; $j < count($listUsers); ++$j) {
            // $debtAmount=$this->orders->sumAmountDebtOrder($listUsers[$j]['id']);
+            $contTotPendientOrders=$this->orders->countPendientOrdersByUserId($listUsers[$j]['id']);
 
             $userReport[]=array('id' => $listUsers[$j]['id'], 'name' => $listUsers[$j]['name'], 'address' => $listUsers[$j]['address'], 'phone' => $listUsers[$j]['phone'],
                 'facebook' => $listUsers[$j]['facebook'], 'zone' => $listUsers[$j]['zone'],'instagram' => $listUsers[$j]['instagram'],
-                'pendient_orders' => $listUsers[$j]['pendient_orders'], 'created' => $listUsers[$j]['created'], 'defaulter' => $listUsers[$j]['defaulter'],
+                'pendient_orders' => $contTotPendientOrders, 'created' => $listUsers[$j]['created'], 'defaulter' => $listUsers[$j]['defaulter'],
                 'debt_value' => 0.0);
         }
         $reportUsers=array('listClients' => $userReport,'totalDebt' => 0.0);

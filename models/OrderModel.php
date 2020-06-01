@@ -93,4 +93,16 @@ class OrderModel extends BaseModel
         }
     }
 
+
+    function countPendientOrdersByUserId($state,$client_id){
+        $response = $this->getDb()->fetch_row('SELECT COUNT(id) AS total FROM '.$this->tableName.' WHERE state = ? AND client_id = ?',$state,$client_id);
+
+        if($response['total']!=null){
+            return $response['total'];
+        }else{
+            $response['total']=0;
+            return $response['total'];
+        }
+    }
+
 }
