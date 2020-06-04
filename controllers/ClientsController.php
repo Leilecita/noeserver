@@ -27,7 +27,7 @@ class ClientsController extends BaseController
 
         for ($j = 0; $j < count($listUsers); ++$j) {
            // $debtAmount=$this->orders->sumAmountDebtOrder($listUsers[$j]['id']);
-            $contTotPendientOrders=$this->orders->countPendientOrdersByUserId($listUsers[$j]['id']);
+            $contTotPendientOrders=$this->orders->countPendientOrdersByUserId("pendiente",$listUsers[$j]['id']);
 
             $userReport[]=array('id' => $listUsers[$j]['id'], 'name' => $listUsers[$j]['name'], 'address' => $listUsers[$j]['address'], 'phone' => $listUsers[$j]['phone'],
                 'facebook' => $listUsers[$j]['facebook'], 'zone' => $listUsers[$j]['zone'],'instagram' => $listUsers[$j]['instagram'],

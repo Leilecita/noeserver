@@ -64,6 +64,7 @@ class OrdersController extends BaseController
         }else{
             $inserted = $this->getModel()->findById($res);
 
+            //esto por si se llega a querer borar una orden pendiente. mientras se esta creando la orden esta en borrador.
             $this->model->update($inserted['id'],array('state'=>"pendiente"));
 
             $this->returnSuccess(201,$inserted);

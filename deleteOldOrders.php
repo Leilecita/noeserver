@@ -1,9 +1,11 @@
 <?php
 
 include 'models/OrderModel.php';
+include 'models/ClientModel.php';
 
 
     $model= new OrderModel();
+    $clients= new ClientModel();
 
 
     $filter=array();
@@ -12,6 +14,18 @@ include 'models/OrderModel.php';
 
     $filter[]='delivery_date < "' .$previous_date.'"';
     $filter[]='state = "' ."pendiente".'"';
-    $model->deleteOldPendientOrders($filter);
+
+    $listPendients= $model->getAllPendientsOrders($filter);
+
+    for ($j = 0; $j < count($listPendients); ++$j) {
+
+        $client=$clients->findById($listPendients[$j]['client_id']);
+        $clients->update($client['id'],array('pendient_orders'=> $client['pendient_orders']-1));
+
+        $model->delete($listPendients[$j]['id']);
+
+    }
+
+   // $model->deleteOldPendientOrders($filter);
 
 
