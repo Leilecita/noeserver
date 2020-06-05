@@ -17,6 +17,14 @@ class OrderModel extends BaseModel
     }
 
 
+    function findAllOrders($filters=array(),$paginator=array()){
+        $conditions = join(' AND ',$filters);
+        $query = 'SELECT *, o.id as order_id FROM orders o JOIN clients c ON o.client_id = c.id '.( empty($filters) ?  '' : ' WHERE '.$conditions ).' ORDER BY o.delivery_date DESC LIMIT '.$paginator['limit'].' OFFSET '.$paginator['offset'];
+        return $this->getDb()->fetch_all($query);
+
+    }
+
+
     function deleteOldPendientOrders($filters){
         $conditions = join(' AND ',$filters);
         $query = 'DELETE FROM '.$this->tableName .( empty($filters) ?  '' : ' WHERE '.$conditions );

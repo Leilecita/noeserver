@@ -29,9 +29,7 @@ class OrdersController extends BaseController
     function getOrdersValues(){
         $date=$this->getDates($_GET['delivery_date']);
 
-        //$pendients=$this->model->count($_GET['delivery_date'],'pendiente');
         $pendients=$this->model->count($date['date'],$date['dateTo'],'pendiente');
-       // $sends=$this->model->count($_GET['delivery_date'],'entregado');
         $sends=$this->model->count($date['date'],$date['dateTo'],'entregado');
 
         $resp=array('pendients' => $pendients, 'sends' => $sends);
@@ -271,20 +269,66 @@ class OrdersController extends BaseController
         }
     }
 
+    function listAllOrders(){
+
+        $filter=array();
+
+        $list_orders_by_deliver_date = $this->model->findAllOrders($filter,$this->getPaginator());
+
+        $listReport=$this->getReportOrder($list_orders_by_deliver_date);
+        $this->returnSuccess(200, $listReport);
+
+    }
+
+
+    function getReportOrder($list_orders_by_deliver_date){
+        $listReport = array();
+
+        for ($j = 0; $j < count($list_orders_by_deliver_date); ++$j) {
+
+            $items_order_list = $this->items_order->findAllItems(array('order_id = "' . $list_orders_by_deliver_date[$j]['order_id'] . '"'));
+
+            $array_product = array();
+            $total_amount=0;
+            for ($i = 0; $i < count($items_order_list); ++$i) {
+
+                $array_product[] = array('name' => $items_order_list[$i]['product_name'], 'price' => $items_order_list[$i]['price'],
+                    'quantity' => $items_order_list[$i]['quantity'],'price_type' => $items_order_list[$i]['price_type']);
+
+                $total_amount=$total_amount+($items_order_list[$i]['price']*$items_order_list[$i]['quantity']);
+
+            }
+
+            $listReport[] = array('defaulter' => $list_orders_by_deliver_date[$j]['defaulter'],
+                'delivery_time' => $list_orders_by_deliver_date[$j]['delivery_time'],'order_created' => $list_orders_by_deliver_date[$j]['created'],
+                'order_obs' => $list_orders_by_deliver_date[$j]['observation'],'order_id' => $list_orders_by_deliver_date[$j]['order_id'],
+                'client_id' => $list_orders_by_deliver_date[$j]['client_id'],
+                'name' => $list_orders_by_deliver_date[$j]['name'],
+                'prepared' => $list_orders_by_deliver_date[$j]['prepared'],
+                'address' => $list_orders_by_deliver_date[$j]['address'],'zone' => $list_orders_by_deliver_date[$j]['zone'],'phone' => $list_orders_by_deliver_date[$j]['phone'],
+                'delivery_date' => $list_orders_by_deliver_date[$j]['delivery_date'],'total_amount' => $total_amount, 'items' => $array_product,
+                'state' => $list_orders_by_deliver_date[$j]['state'],'priority' => $list_orders_by_deliver_date[$j]['priority']
+            );
+        }
+
+        return $listReport;
+    }
+
     function listAndSearchOrders(){
 
-        if(isset($_GET['delivery_date'])) {
             $listReport = array();
 
-
-            $dates=$this->getDates($_GET['delivery_date']);
             $filter=array();
-            $filter[]='delivery_date < "' .$dates['dateTo'].'"';
-            $filter[]='delivery_date >= "' .$dates['date'].'"';
 
-           // $filter=array();
-            //$filter[]='deliver_date = "' .$_GET['deliver_date'].'"';
+            if(isset($_GET['delivery_date'])) {
 
+
+                $dates=$this->getDates($_GET['delivery_date']);
+
+                $filter[]='delivery_date < "' .$dates['dateTo'].'"';
+                $filter[]='delivery_date >= "' .$dates['date'].'"';
+
+            }
             if(isset($_GET['time'])){
                 if(strcmp($_GET['time'],"Todos los horarios")!==0 ){
                     $filter[] = 'delivery_time = "' . $_GET['time'] . '"';
@@ -303,7 +347,9 @@ class OrdersController extends BaseController
 
             $list_orders_by_deliver_date = $this->model->findAllOrdersAndClient($filter,$this->getPaginator());
 
-            for ($j = 0; $j < count($list_orders_by_deliver_date); ++$j) {
+            $listReport=$this->getReportOrder($list_orders_by_deliver_date);
+
+           /* for ($j = 0; $j < count($list_orders_by_deliver_date); ++$j) {
 
                 $items_order_list = $this->items_order->findAllItems(array('order_id = "' . $list_orders_by_deliver_date[$j]['order_id'] . '"'));
 
@@ -326,16 +372,16 @@ class OrdersController extends BaseController
                     'prepared' => $list_orders_by_deliver_date[$j]['prepared'],
                     'address' => $list_orders_by_deliver_date[$j]['address'],'zone' => $list_orders_by_deliver_date[$j]['zone'],'phone' => $list_orders_by_deliver_date[$j]['phone'],
                     'delivery_date' => $list_orders_by_deliver_date[$j]['delivery_date'],'total_amount' => $total_amount, 'items' => $array_product,
-                    'state' => $list_orders_by_deliver_date[$j]['state'],'priority' => $list_orders_by_deliver_date[$j]['priority'],
+                    'state' => $list_orders_by_deliver_date[$j]['state'],'priority' => $list_orders_by_deliver_date[$j]['priority']
                     );
                 //'debt_value' => $list_orders_by_deliver_date[$j]['debt_value']
-            }
+            }*/
 
             $this->returnSuccess(200, $listReport);
 
-        }else{
+      /*  }else{
             $this->returnError(404,"ENTITY NOT FOUND");
-        }
+        }*/
     }
 
     public function get()
@@ -374,7 +420,7 @@ class OrdersController extends BaseController
                     'prepared' => $list_orders_by_user_id[$j]['prepared'],
                     'address' => $client['address'],'zone' => $client['zone'],'phone' => $client['phone'],
                     'delivery_date' => $list_orders_by_user_id[$j]['delivery_date'],'total_amount' => $total_amount, 'items' => $array_product,
-                    'state' => $list_orders_by_user_id[$j]['state'], 'priority' => $list_orders_by_user_id[$j]['priority'],
+                    'state' => $list_orders_by_user_id[$j]['state'], 'priority' => $list_orders_by_user_id[$j]['priority']
                     );
             }
 
