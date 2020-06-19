@@ -10,6 +10,8 @@ require_once __DIR__.'/../models/OrderModel.php';
 require_once __DIR__.'/../models/ClientModel.php';
 require_once __DIR__.'/../models/ProductModel.php';
 require_once __DIR__.'/../models/ItemOrderModel.php';
+require_once __DIR__.'/../template/template.php';
+require_once __DIR__.'/../config/config.php';
 
 class OrdersController extends BaseController
 {
@@ -449,5 +451,114 @@ class OrdersController extends BaseController
 
         $this->model->deleteOldPendientOrders($filter);
     }
+
+    //PDF
+
+    function getItems($orderId){
+        $filter2=array();
+        $filter2[]='order_id = "' . $orderId . '"';
+
+        $items_order_list = $this->items_order->findAllItems($filter2);
+
+        $array_product = array();
+        $total_amount=0;
+        for ($i = 0; $i < count($items_order_list); ++$i) {
+
+                $array_product[] = array('name' => $items_order_list[$i]['product_name'], 'price' => $items_order_list[$i]['price'],
+                    'quantity' => $items_order_list[$i]['quantity'],'price_type' => $items_order_list[$i]['price_type']);
+
+                $total_amount=$total_amount+($items_order_list[$i]['price']*$items_order_list[$i]['quantity']);
+
+        }
+        return $list=array('items'=>$array_product,'total_amount'=>$total_amount);
+    }
+
+    function generatePdf(){
+
+        if(isset($_GET['order_id'])){
+
+            $orderId = $_GET['order_id'];
+            $order=$this->model->findById($orderId);
+
+            $user=$this->clients->findById($order['client_id']);
+
+            $data = array(
+                'items' => array( array('name' => 'Langostinos', "qty" => 1, "price"=>"160"), array('name' => 'Merluza', "qty" => 2, "price"=>"140"))
+            );
+            // echo render($data);
+
+            // $filename="Order-".$orderId."pdf";
+            $filename="Order-".$user['name']."pdf";
+
+            // $this->generate_pdf(render($data),$filename);
+
+            $parts = explode(" ", $this->getDate($order['delivery_date']));
+            $date=$parts[0];
+
+            $this->generate_pdf(render($this->getItems($orderId),$user,$date),$filename);
+
+
+        }else{
+            $this->returnError(400,"No se valida order_id");
+        }
+
+    }
+
+    function getDate($completeDate){
+        $parts = explode(" ", $completeDate);
+        $date=$parts[0];
+
+        $partsDate = explode("-", $date);
+
+        return $partsDate[2]."-".$partsDate[1]."-".$partsDate[0];
+
+    }
+
+    function generate_pdf($template, $filename )
+    {
+        global $WKCONFIG;
+
+        $html=$template;
+
+        // Run wkhtmltopdf
+        $descriptorspec = array(
+            0 => array('pipe', 'r'), // stdin
+            1 => array('pipe', 'w'), // stdout
+            2 => array('pipe', 'w'), // stderr
+        );
+
+        $process = proc_open($WKCONFIG['PATH'].' -q - -', $descriptorspec, $pipes);
+
+        // Send the HTML on stdin
+        fwrite($pipes[0], $html);
+        fclose($pipes[0]);
+
+        // Read the outputs
+        $pdf = stream_get_contents($pipes[1]);
+        $errors = stream_get_contents($pipes[2]);
+
+        // Close the process
+        fclose($pipes[1]);
+
+        $return_value = proc_close($process);
+
+        // Output the results
+        if ($errors) {
+            http_response_code(400);
+            echo "PDF generation failed ".$errors;
+        } else {
+            header('Content-Type: application/pdf');
+            header('Cache-Control: public, must-revalidate, max-age=0'); // HTTP/1.1
+            header('Pragma: public');
+            header('Expires: Sat, 26 Jul 1997 05:00:00 GMT'); // Date in the past
+            header('Last-Modified: ' . gmdate('D, d M Y H:i:s').' GMT');
+            header('Content-Length: ' . strlen($pdf));
+            header('Content-Disposition: inline; filename="' . $filename . '";');
+            ob_clean();
+            flush();
+            echo $pdf;
+        }
+    }
+
 
 }
