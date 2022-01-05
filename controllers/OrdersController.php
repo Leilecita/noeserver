@@ -542,11 +542,7 @@ class OrdersController extends BaseController
 
         $return_value = proc_close($process);
 
-        // Output the results
-        if ($errors) {
-            http_response_code(400);
-            echo "PDF generation failed ".$errors;
-        } else {
+        if($pdf){
             header('Content-Type: application/pdf');
             header('Cache-Control: public, must-revalidate, max-age=0'); // HTTP/1.1
             header('Pragma: public');
@@ -557,7 +553,12 @@ class OrdersController extends BaseController
             ob_clean();
             flush();
             echo $pdf;
+        }else if ($errors) {
+            http_response_code(400);
+            echo "PDF generation failed ".$errors;
         }
+
+
     }
 
 
